@@ -106,6 +106,7 @@ export default class GHSyncPlugin extends Plugin {
 					const arr = conflictStatus[key as keyof StatusResult];
 
 					if (Array.isArray(arr) && arr.length > 0){
+						conflictMsg += "\n\n\t"+arr;
 						for (let c of arr){
 							conflictMsg += "\n\t"+c;
 						}
