@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, Vault } from 'obsidian';
-import { simpleGit, SimpleGit, CleanOptions, SimpleGitOptions } from 'simple-git';
+import { simpleGit, SimpleGit, CleanOptions, SimpleGitOptions, StatusResult } from 'simple-git';
 import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 
 let simpleGitOptions: Partial<SimpleGitOptions>;
@@ -97,13 +97,25 @@ export default class GHSyncPlugin extends Plugin {
 	   		})
 	    } catch (e) {
 	    	let conflictStatus = await git.status().catch((e) => { new Notice(e, 10000); return; });
-    		let conflictMsg = "Merge conflicts in:";
-	    	//@ts-ignore
-			for (let c of conflictStatus.conflicted)
-			{
-				conflictMsg += "\n\t"+c;
+    		let conflictMsg = "So, this is the full status report or whatever:";
+			
+			const fieldsToCheck = ['not_added', 'conflicted', 'created', 'deleted', 'modified', 'renamed', 'files', 'staged'] as const;
+
+			if (conflictStatus) {
+				for (const key in fieldsToCheck){
+					const arr = conflictStatus[key as keyof StatusResult];
+
+					if (Array.isArray(arr) && arr.length > 0){
+						for (let c of arr){
+							conflictMsg += "\n\t"+c;
+						}
+					}
+
+				}
 			}
-			conflictMsg += "\nResolve them or click sync button again to push with unresolved conflicts."
+
+			new Notice(conflictMsg)
+			conflictMsg = "\nMerge conflicts opened."
 			new Notice(conflictMsg)
 			//@ts-ignore	
 			for (let c of conflictStatus.conflicted)
